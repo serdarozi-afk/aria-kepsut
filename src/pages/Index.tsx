@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Search, Plus, LayoutDashboard, Users, Building2, BarChart3, Settings, Bell, ChevronDown, SlidersHorizontal, ArrowUpRight, ArrowDownRight, MoreHorizontal, Mail, Phone, CalendarDays, X, Compass, Menu, Download, Check } from "lucide-react";
+import { Search, Plus, LayoutDashboard, Users, BarChart3, Settings, Bell, ChevronDown, SlidersHorizontal, ArrowUpRight, ArrowDownRight, MoreHorizontal, Mail, Phone, CalendarDays, Compass, Menu, Download, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -25,7 +25,7 @@ const Index = () => {
   const [mobileMenu, setMobileMenu] = useState(false);
   const visible = useMemo(() => customers.filter(c => (filter === "Tümü" || c.status === filter) && `${c.name} ${c.company} ${c.email}`.toLowerCase().includes(query.toLowerCase())), [customers, filter, query]);
   const addCustomer = () => { if (!newName.trim() || !newCompany.trim()) return; setCustomers([{ id: Date.now(), name: newName, company: newCompany, email: "—", phone: "—", status: "Yeni aday", value: "₺0", date: "Bugün", initials: newName.split(" ").map(s => s[0]).join("").slice(0, 2).toUpperCase(), color: "bg-[#dce9e5]" }, ...customers]); setNewName(""); setNewCompany(""); setShowAdd(false); };
-  const nav = [{ label: "Genel Bakış", icon: LayoutDashboard }, { label: "Müşteriler", icon: Users }, { label: "Şirketler", icon: Building2 }, { label: "Raporlar", icon: BarChart3 }];
+  const nav = [{ label: "Genel Bakış", icon: LayoutDashboard }, { label: "Müşteriler", icon: Users }, { label: "Raporlar", icon: BarChart3 }];
   return <div className="min-h-screen bg-[#f7f8f6] text-[#263634]">
     <aside className={`${mobileMenu ? "translate-x-0" : "-translate-x-full"} fixed inset-y-0 left-0 z-30 flex w-[250px] flex-col border-r border-[#e9eeeb] bg-white px-5 py-6 transition-transform md:translate-x-0`}>
       <div className="mb-10 flex items-center gap-3 px-1"><div className="flex h-10 w-10 items-center justify-center rounded-[14px] bg-[#247b78] text-white shadow-sm"><Compass size={23}/></div><div><div className="font-serif text-[19px] font-semibold tracking-tight">MüşteriPusula</div><div className="text-[10px] font-semibold uppercase tracking-[.17em] text-[#96a5a0]">CRM WORKSPACE</div></div></div>
