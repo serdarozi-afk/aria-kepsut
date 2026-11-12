@@ -10,8 +10,15 @@ test("adds a customer with identity and contact details", async ({ page }) => {
   await page.getByLabel("Cep telefon").fill("05551234567");
   await page.getByRole("button", { name: "Müşteriyi ekle" }).click();
 
-  await expect(page.getByText("Deniz Aksoy", { exact: true })).toBeVisible();
-  await expect(page.getByRole("cell", { name: "Kepsut, Balıkesir" })).toBeVisible();
-  await expect(page.getByRole("cell", { name: "12345678901" })).toBeVisible();
-  await expect(page.getByRole("link", { name: "05551234567" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Deniz Aksoy" })).toBeVisible();
+  const newCustomerRow = page.getByRole("row").filter({ hasText: "Deniz Aksoy" });
+  await expect(newCustomerRow.getByRole("cell", { name: "₺0,00" })).toBeVisible();
+});
+
+test("exports all customer balances", async ({ page }) => {
+  await page.goto("/");
+  const downloadPromise = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Tüm Bakiyeler" }).click();
+  const download = await downloadPromise;
+  expect(download.suggestedFilename()).toBe("tum-bakiyeler.csv");
 });

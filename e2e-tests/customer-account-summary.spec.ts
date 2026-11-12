@@ -15,7 +15,7 @@ test("shows a customer's sales and collections and downloads the account summary
   await page.getByRole("button", { name: "Tahsilatı kaydet" }).click();
 
   await page.getByRole("button", { name: "Müşteriler" }).click();
-  await page.getByRole("button", { name: "Hesap özeti" }).first().click();
+  await page.getByRole("button", { name: "Selin Yılmaz" }).click();
   await expect(page.getByRole("heading", { name: "Hesap özeti · Selin Yılmaz" })).toBeVisible();
   await expect(page.getByText("Danışmanlık Paketi", { exact: true })).toBeVisible();
   await expect(page.getByText("Nakit", { exact: true })).toBeVisible();
