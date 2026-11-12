@@ -97,23 +97,58 @@ const Index = () => {
   const addCollection = () => { const customer = customers.find(c => String(c.id) === collectionCustomer); const amount = Number(collectionAmount); if (!customer || !collectionMethod || !Number.isFinite(amount) || amount <= 0) return; setCollections([{ id: Date.now(), customer: customer.name, method: collectionMethod, amount, date: formatDateDmy(collectionDate) }, ...collections]); setCollectionCustomer(""); setCollectionMethod(""); setCollectionAmount(""); };
   const createAccountPdf = (customer: Customer) => {
     const pdf = new jsPDF();
-    const ascii = (value: string) => value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/ı/g, "i").replace(/İ/g, "I");
+    const ascii = (value: string) => value.replace(/₺/g, "TL").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/ı/g, "i").replace(/İ/g, "I");
     const customerSales = sales.filter(sale => sale.customer === customer.name);
     const customerCollections = collections.filter(item => item.customer === customer.name);
     const sold = customerSales.reduce((sum, sale) => sum + sale.total, 0);
     const paid = customerCollections.reduce((sum, item) => sum + item.amount, 0);
-    pdf.setFontSize(18); pdf.text(ascii("ARIA KEPSUT - Hesap Ozeti"), 16, 20);
-    pdf.setFontSize(11); pdf.text(ascii(`Musteri: ${customer.name}`), 16, 31);
-    pdf.text(ascii(`Adres: ${customer.address}`), 16, 38);
-    pdf.text(ascii(`TCKN: ${customer.tckn} | Cep tel: ${customer.phone}`), 16, 45);
-    pdf.text(ascii(`Toplam satis: ${money(sold)} | Toplam tahsilat: ${money(paid)} | Bakiye: ${money(sold-paid)}`), 16, 55);
-    let y = 68;
-    pdf.setFontSize(13); pdf.text(ascii("Satislar"), 16, y); y += 8; pdf.setFontSize(10);
-    if (customerSales.length === 0) { pdf.text(ascii("Kayitli satis yok"), 16, y); y += 7; }
-    for (const sale of customerSales) { if (y > 275) { pdf.addPage(); y = 20; } pdf.text(ascii(`${sale.date} | ${sale.product} | ${sale.quantity} adet | ${money(sale.total)}`), 16, y); y += 7; }
-    y += 5; if (y > 275) { pdf.addPage(); y = 20; } pdf.setFontSize(13); pdf.text(ascii("Tahsilatlar"), 16, y); y += 8; pdf.setFontSize(10);
-    if (customerCollections.length === 0) pdf.text(ascii("Kayitli tahsilat yok"), 16, y);
-    for (const item of customerCollections) { if (y > 275) { pdf.addPage(); y = 20; } pdf.text(ascii(`${item.date} | ${item.method} | ${money(item.amount)}`), 16, y); y += 7; }
+    const pageWidth = 210;
+    pdf.setFont("helvetica", "normal"); pdf.setFontSize(16); pdf.setTextColor(25, 25, 25); pdf.text("ARIA KEPSUT", 13, 16);
+    pdf.setFontSize(9); pdf.text(ascii("Hesap Ozeti"), 13, 27); pdf.text(ascii(`Musteri: ${customer.name}`), 13, 37);
+    pdf.text(ascii(`Adres: ${customer.address}`), 13, 46); pdf.text(`TCKN: ${customer.tckn}`, 13, 55); pdf.text(ascii(`Cep tel: ${customer.phone}`), 13, 64);
+    pdf.setFont("helvetica", "bold"); pdf.setFontSize(27); pdf.setTextColor(55, 170, 48); pdf.text("ARIA", 92, 34);
+    pdf.setTextColor(0, 0, 0); pdf.text("YEM", 145, 34); pdf.setFontSize(11); pdf.text(ascii("ONCE GUVEN"), 132, 43);
+
+    let y = 77;
+    const drawTable = (title: string, headers: string[], widths: number[], rows: string[][], totalLabel: string, totalValue: string) => {
+      const rowHeight = 6.5;
+      const tableWidth = widths.reduce((sum, width) => sum + width, 0);
+      const left = (pageWidth - tableWidth) / 2;
+      const drawHeader = () => {
+        let x = left;
+        headers.forEach((header, index) => {
+          pdf.setFillColor(60, 166, 43); pdf.setDrawColor(0, 0, 0); pdf.rect(x, y, widths[index], rowHeight, "FD");
+          pdf.setFont("helvetica", "bold"); pdf.setFontSize(8); pdf.setTextColor(255, 255, 255); pdf.text(ascii(header), x + 1.5, y + 4.4); x += widths[index];
+        });
+        y += rowHeight;
+      };
+      if (y > 268) { pdf.addPage(); y = 18; }
+      pdf.setFont("helvetica", "normal"); pdf.setFontSize(10); pdf.setTextColor(0, 0, 0); pdf.text(ascii(title), left, y); y += 5;
+      drawHeader();
+      const tableRows = rows.length ? rows : [Array.from({ length: widths.length }, (_, index) => index === 1 ? "Kayit bulunamadi" : "")];
+      tableRows.forEach((row, rowIndex) => {
+        if (y > 278) { pdf.addPage(); y = 18; drawHeader(); }
+        let x = left;
+        row.forEach((cell, index) => {
+          pdf.setFillColor(rowIndex % 2 === 0 ? 218 : 255, rowIndex % 2 === 0 ? 241 : 255, rowIndex % 2 === 0 ? 211 : 255);
+          pdf.setDrawColor(0, 0, 0); pdf.rect(x, y, widths[index], rowHeight, "FD");
+          pdf.setFont("helvetica", "normal"); pdf.setFontSize(7.5); pdf.setTextColor(0, 0, 0); pdf.text(ascii(cell), x + 1.5, y + 4.4, { maxWidth: widths[index] - 3 }); x += widths[index];
+        });
+        y += rowHeight;
+      });
+      if (y > 278) { pdf.addPage(); y = 18; }
+      const labelWidth = widths[widths.length - 2];
+      const labelX = left + tableWidth - widths[widths.length - 1] - labelWidth;
+      pdf.setFillColor(255, 255, 255); pdf.setDrawColor(0, 0, 0); pdf.rect(left, y, labelX - left, rowHeight, "FD");
+      pdf.setFillColor(220, 220, 220); pdf.rect(labelX, y, labelWidth, rowHeight, "FD");
+      pdf.rect(labelX + labelWidth, y, widths[widths.length - 1], rowHeight, "FD");
+      pdf.setFont("helvetica", "bold"); pdf.setFontSize(8); pdf.setTextColor(0, 0, 0);
+      pdf.text(ascii(totalLabel), labelX + 1.5, y + 4.4); pdf.text(ascii(totalValue), labelX + labelWidth + 1.5, y + 4.4, { maxWidth: widths[widths.length - 1] - 3 });
+      y += rowHeight + 10;
+    };
+
+    drawTable("SATISLAR", ["TARIH", "URUN", "FIYAT", "TUTAR"], [34, 70, 38, 42], customerSales.map(sale => [sale.date, sale.product, `${sale.quantity} adet`, money(sale.total)]), "TOPLAM", money(sold));
+    drawTable("TAHSILATLAR", ["TARIH", "URUN", "FIYAT"], [42, 91, 51], customerCollections.map(item => [item.date, item.method, money(item.amount)]), "TOPLAM", money(paid));
     pdf.save(`hesap-ozeti-${ascii(customer.name).toLowerCase().replace(/[^a-z0-9]+/g, "-")}.pdf`);
   };
   const createAllBalancesPdf = () => {
