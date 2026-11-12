@@ -104,7 +104,7 @@ const Index = () => {
     }
     pdf.save("tum-bakiyeler.pdf");
   };
-  const nav = [{ label: "Yapılacak İşler", icon: LayoutDashboard }, { label: "Müşteriler", icon: Users }, { label: "Ürünler", icon: Package }, { label: "Satışlar", icon: ShoppingCart }, { label: "Tahsilatlar", icon: Wallet }, { label: "Raporlar", icon: BarChart3 }];
+  const nav = [{ label: "Müşteriler", icon: Users }, { label: "Ürünler", icon: Package }, { label: "Satışlar", icon: ShoppingCart }, { label: "Tahsilatlar", icon: Wallet }, { label: "Raporlar", icon: BarChart3 }, { label: "Yapılacak İşler", icon: LayoutDashboard }];
   const selectClass = "mt-1.5 h-10 w-full rounded-xl border border-[#e4ebe7] bg-white px-3 text-[13px] text-[#394d46] outline-none focus:border-[#76aaa0] focus:ring-2 focus:ring-[#247b78]/10";
   return <div className="min-h-screen bg-[#f7f8f6] text-[#263634]">
     <aside className={`${mobileMenu ? "translate-x-0" : "-translate-x-full"} fixed inset-y-0 left-0 z-30 flex w-[250px] flex-col border-r border-[#e9eeeb] bg-white px-5 py-6 transition-transform md:translate-x-0`}>
