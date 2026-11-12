@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Search, Plus, LayoutDashboard, Users, BarChart3, Settings, Bell, ChevronDown, SlidersHorizontal, ArrowUpRight, ArrowDownRight, MoreHorizontal, Mail, Phone, CalendarDays, Compass, Menu, Download, Check, ShoppingCart, Package, Wallet, ReceiptText, FileDown, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,7 +24,7 @@ const seed: Customer[] = [
   { id: 5, name: "Zeynep Arslan", company: "Yakamoz Turizm", address: "Muratpaşa, Antalya", tckn: "10000000544", email: "zeynep@yakamoz.com", phone: "+90 542 118 75 22", status: "Aktif müşteri", value: "₺127.000", date: "10 Haz 2025", initials: "ZA", color: "bg-[#e8dce9]" },
   { id: 6, name: "Mert Şahin", company: "Ortaklar Hukuk", address: "Tepebaşı, Eskişehir", tckn: "10000000646", email: "mert@ortaklar.av.tr", phone: "+90 505 384 66 03", status: "Yeni aday", value: "₺29.900", date: "9 Haz 2025", initials: "MŞ", color: "bg-[#e9d8d4]" },
 ];
-const initialProducts: Product[] = [{ id: 1, name: "Danışmanlık Paketi", price: 12500, stock: 20 }, { id: 2, name: "Kurumsal Lisans", price: 24000, stock: 12 }, { id: 3, name: "Başlangıç Paketi", price: 7500, stock: 35 }];
+const removedProductNames = new Set(["Danışmanlık Paketi", "Kurumsal Lisans", "Başlangıç Paketi"]);
 const statusTone: Record<string, string> = { "Aktif müşteri": "bg-[#e7f3ee] text-[#28785d]", "Teklif gönderildi": "bg-[#fff2dc] text-[#a66a12]", "Yeni aday": "bg-[#e9effb] text-[#4968a3]", "Görüşme planlandı": "bg-[#f0eafb] text-[#7858a5]" };
 const money = (value: number) => new Intl.NumberFormat("tr-TR", { style: "currency", currency: "TRY", maximumFractionDigits: 2 }).format(value);
 const formatDateDmy = (isoDate: string) => isoDate.split("-").reverse().join("/");
@@ -40,8 +40,9 @@ const Index = () => {
   const { user, signOutUser } = useFirebaseUser();
   const { data, saveTable } = useGoogleSheets();
   const [sheetsLoaded, setSheetsLoaded] = useState(false);
+  const didLoadSheetData = useRef(false);
   const [customers, setCustomers] = useState(seed);
-  const [products, setProducts] = useState<Product[]>(initialProducts);
+  const [products, setProducts] = useState<Product[]>([]);
   const [sales, setSales] = useState<Sale[]>([]);
   const [retailSales, setRetailSales] = useState<RetailSale[]>([]);
   const [collections, setCollections] = useState<Collection[]>([]);
@@ -69,8 +70,10 @@ const Index = () => {
   const [collectionDate, setCollectionDate] = useState(new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,10));
   const [mobileMenu, setMobileMenu] = useState(false);
   useEffect(() => {
+    if (didLoadSheetData.current) return;
+    didLoadSheetData.current = true;
     setCustomers(data.Customers.length ? data.Customers as unknown as Customer[] : seed);
-    if (data.Products.length) setProducts(data.Products as unknown as Product[]);
+    setProducts((data.Products as unknown as Product[]).filter(product => !removedProductNames.has(product.name)));
     if (data.Sales.length) setSales(data.Sales as unknown as Sale[]);
     if (data.RetailSales.length) setRetailSales(data.RetailSales as unknown as RetailSale[]);
     if (data.Collections.length) setCollections(data.Collections as unknown as Collection[]);
