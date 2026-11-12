@@ -101,6 +101,33 @@ export const readSpreadsheet = async (token: string, id: string): Promise<SheetR
   return rows as SheetRows;
 };
 
+export const normalizeSheetIds = (rows: SheetRows) => {
+  const normalized = { ...rows };
+  const changedTables: SheetTable[] = [];
+
+  for (const table of Object.keys(tableFields) as SheetTable[]) {
+    const reservedIds = new Set(rows[table].map(row => Number(row.id)).filter(id => Number.isSafeInteger(id) && id > 0));
+    const usedIds = new Set<number>();
+    let candidate = Date.now();
+    let changed = false;
+    normalized[table] = rows[table].map(row => {
+      const id = Number(row.id);
+      if (!Number.isSafeInteger(id) || id <= 0 || usedIds.has(id)) {
+        while (reservedIds.has(candidate) || usedIds.has(candidate)) candidate += 1;
+        const newId = candidate++;
+        usedIds.add(newId);
+        changed = true;
+        return { ...row, id: newId };
+      }
+      usedIds.add(id);
+      return row;
+    });
+    if (changed) changedTables.push(table);
+  }
+
+  return { rows: normalized, changedTables };
+};
+
 export const writeSheetTable = async (token: string, id: string, table: SheetTable, rows: Record<string, unknown>[]) => {
   const title = tableTitles[table];
   await apiRequest(`${spreadsheetUrl(id)}/values:batchClear`, token, {

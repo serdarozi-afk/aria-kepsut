@@ -3,7 +3,7 @@ import { GoogleAuthProvider, signInWithPopup, type User } from "firebase/auth";
 import { CircleAlert, Cloud, LoaderCircle, RefreshCw, Sheet, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import firebaseAuth from "@/lib/firebase";
-import { emptySheetRows, findOrCreateSpreadsheet, readLegacyRows, readSpreadsheet, writeSheetTable, type SheetRows, type SheetTable } from "@/lib/googleSheets";
+import { emptySheetRows, findOrCreateSpreadsheet, normalizeSheetIds, readLegacyRows, readSpreadsheet, writeSheetTable, type SheetRows, type SheetTable } from "@/lib/googleSheets";
 
 type GoogleSheetsContextValue = { data: SheetRows; saveTable: (table: SheetTable, rows: Record<string, unknown>[]) => void };
 const GoogleSheetsContext = createContext<GoogleSheetsContextValue | null>(null);
@@ -47,11 +47,12 @@ const GoogleSheetsGate = ({ user, signOutUser, children }: Props) => {
           imported.push(table);
         }
       });
+      const { rows: normalizedRows, changedTables } = normalizeSheetIds(rows);
       sessionStorage.setItem(tokenKey(user.uid), JSON.stringify({ token, expiresAt: Date.now() + 55 * 60 * 1000 }));
       setSpreadsheetId(id);
       setAccessToken(token);
-      setData(rows);
-      for (const table of imported) await writeSheetTable(token, id, table, rows[table]);
+      setData(normalizedRows);
+      for (const table of new Set([...imported, ...changedTables])) await writeSheetTable(token, id, table, normalizedRows[table]);
     } catch (cause) {
       setAccessToken(null);
       setError(cause instanceof Error ? cause.message : "Google E-Tablolar bağlantısı kurulamadı.");
