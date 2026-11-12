@@ -2,6 +2,9 @@ import { test, expect } from "@playwright/test";
 
 test("adds a customer with identity and contact details", async ({ page }) => {
   await page.goto("/");
+  await expect(page.getByText("Toplam satışlar", { exact: true })).toHaveCount(0);
+  await expect(page.getByText("Toplam tahsilat", { exact: true })).toHaveCount(0);
+  await expect(page.getByText("Toplam alacak", { exact: true })).toHaveCount(0);
   await page.getByRole("button", { name: "Yeni müşteri" }).click();
   await page.getByLabel("İsim").fill("Deniz");
   await page.getByLabel("Soyisim").fill("Aksoy");

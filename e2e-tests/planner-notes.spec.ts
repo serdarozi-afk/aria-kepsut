@@ -8,6 +8,7 @@ test("adds dated notes and lists them when the date is selected", async ({ page 
   await page.getByLabel("Yeni not").fill("Teklif için müşteriyi ara");
   await page.getByRole("button", { name: "Notu kaydet" }).click();
   await expect(page.getByText("Teklif için müşteriyi ara")).toBeVisible();
+  await expect(page.getByText("15/03/2030", { exact: true })).toBeVisible();
 
   await page.getByLabel("Not tarihi").fill("2030-03-16");
   await expect(page.getByText("Bu tarih için kayıtlı not yok.")).toBeVisible();

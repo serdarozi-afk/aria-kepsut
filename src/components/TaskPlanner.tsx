@@ -75,11 +75,11 @@ const TaskPlanner = () => {
             <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#eaf3f1] text-[#247b78]"><StickyNote size={18} /></span>
             <div>
               <h2 className="font-serif text-xl font-semibold text-[#344842]">Notlar</h2>
-              <p className="mt-1 text-xs text-[#8b9a95]">{new Date(`${selectedDate}T00:00:00`).toLocaleDateString("tr-TR", { day: "numeric", month: "long", year: "numeric" })}</p>
+              <p className="mt-1 text-xs text-[#8b9a95]">{selectedDate.split("-").reverse().join("/")}</p>
             </div>
           </div>
           <label className="mb-4 block text-xs font-semibold text-[#53645e]">Not tarihi
-            <input aria-label="Not tarihi" type="date" value={selectedDate} onChange={event => { const value = event.target.value; setSelectedDate(value); const [year, monthNumber] = value.split("-").map(Number); setMonth(new Date(year, monthNumber - 1, 1)); }} className="mt-1.5 h-10 w-full rounded-xl border border-[#e4ebe7] bg-white px-3 text-[13px] outline-none focus:border-[#76aaa0]" />
+            <input aria-label="Not tarihi" type="date" lang="tr" value={selectedDate} onChange={event => { const value = event.target.value; setSelectedDate(value); const [year, monthNumber] = value.split("-").map(Number); setMonth(new Date(year, monthNumber - 1, 1)); }} className="mt-1.5 h-10 w-full rounded-xl border border-[#e4ebe7] bg-white px-3 text-[13px] outline-none focus:border-[#76aaa0]" />
           </label>
           <label className="block text-xs font-semibold text-[#53645e]">Yeni not
             <textarea aria-label="Yeni not" value={noteText} onChange={event => setNoteText(event.target.value)} placeholder="Bu tarih için notunuzu yazın..." rows={3} className="mt-1.5 w-full resize-y rounded-xl border border-[#e4ebe7] p-3 text-[13px] font-normal outline-none placeholder:text-[#a5b0ac] focus:border-[#76aaa0]" />
