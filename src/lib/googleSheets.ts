@@ -12,7 +12,7 @@ export type SheetTable = keyof typeof tableFields;
 export type SheetRows = Record<SheetTable, Record<string, unknown>[]>;
 export const tableTitles: Record<SheetTable, string> = {
   Customers: "Müşteriler",
-  Products: "Depo",
+  Products: "Ürünler",
   Sales: "Satışlar",
   RetailSales: "Perakende Satışlar",
   Collections: "Tahsilatlar",
@@ -57,8 +57,18 @@ const createSpreadsheet = async (token: string) => {
 };
 
 const ensureSheets = async (token: string, id: string) => {
-  const result = await apiRequest(`${spreadsheetUrl(id)}?fields=sheets.properties.title`, token);
-  const existing = new Set<string>((result.sheets || []).map((sheet: { properties: { title: string } }) => sheet.properties.title));
+  const result = await apiRequest(`${spreadsheetUrl(id)}?fields=sheets.properties.sheetId,sheets.properties.title`, token);
+  const sheets = (result.sheets || []) as { properties: { sheetId: number; title: string } }[];
+  const existing = new Set(sheets.map(sheet => sheet.properties.title));
+  const oldDepotSheet = sheets.find(sheet => sheet.properties.title === "Depo");
+  if (!existing.has("Ürünler") && oldDepotSheet) {
+    await apiRequest(`${spreadsheetUrl(id)}:batchUpdate`, token, {
+      method: "POST",
+      body: JSON.stringify({ requests: [{ updateSheetProperties: { properties: { sheetId: oldDepotSheet.properties.sheetId, title: "Ürünler" }, fields: "title" } }] }),
+    });
+    existing.delete("Depo");
+    existing.add("Ürünler");
+  }
   const missing = Object.values(tableTitles).filter(title => !existing.has(title));
   if (missing.length) {
     await apiRequest(`${spreadsheetUrl(id)}:batchUpdate`, token, {
@@ -94,7 +104,7 @@ export const readSpreadsheet = async (token: string, id: string): Promise<SheetR
     rows[table as SheetTable] = values.slice(1).filter((row: unknown[]) => row.some(value => value !== "")).map((row: unknown[]) =>
       Object.fromEntries(fields.map((field, fieldIndex) => {
         const value = row[fieldIndex] ?? "";
-        return [field, numericFields.has(field) && value !== "" ? Number(value) : value];
+        return [field, numericFields.has(field) ? (value === "" ? 0 : Number(value)) : value];
       })),
     );
   });
