@@ -28,6 +28,11 @@ const seed: Customer[] = [
 const removedProductNames = new Set(["Danışmanlık Paketi", "Kurumsal Lisans", "Başlangıç Paketi"]);
 const statusTone: Record<string, string> = { "Aktif müşteri": "bg-[#e7f3ee] text-[#28785d]", "Teklif gönderildi": "bg-[#fff2dc] text-[#a66a12]", "Yeni aday": "bg-[#e9effb] text-[#4968a3]", "Görüşme planlandı": "bg-[#f0eafb] text-[#7858a5]" };
 const money = (value: number) => new Intl.NumberFormat("tr-TR", { style: "currency", currency: "TRY", maximumFractionDigits: 2 }).format(value);
+const normalizePhone = (phone: string) => {
+  const digits = phone.replace(/\D/g, "");
+  const nationalNumber = digits.startsWith("0090") ? digits.slice(4) : digits.startsWith("90") ? digits.slice(2) : digits.startsWith("0") ? digits.slice(1) : digits;
+  return nationalNumber ? `+90 ${nationalNumber}` : "";
+};
 const drawPdfTextWithLira = (pdf: jsPDF, value: string, x: number, y: number, maxWidth: number) => {
   let cursor = x;
   const chunks = value.split("₺");
@@ -81,7 +86,8 @@ const Index = () => {
   const [newSurname, setNewSurname] = useState("");
   const [newAddress, setNewAddress] = useState("");
   const [newTckn, setNewTckn] = useState("");
-  const [newPhone, setNewPhone] = useState("");
+  const [newPhone, setNewPhoneValue] = useState("");
+  const setNewPhone = (value: string) => setNewPhoneValue(normalizePhone(value));
   const [productName, setProductName] = useState("");
   const [productPrice, setProductPrice] = useState("");
   const [saleCustomer, setSaleCustomer] = useState("");
@@ -94,7 +100,7 @@ const Index = () => {
   useEffect(() => {
     if (didLoadSheetData.current) return;
     didLoadSheetData.current = true;
-    setCustomers(data.Customers.length ? data.Customers as unknown as Customer[] : seed);
+    setCustomers(data.Customers.length ? (data.Customers as unknown as Customer[]).map(customer => ({ ...customer, phone: normalizePhone(customer.phone) })) : seed);
     setProducts((data.Products as unknown as Product[]).filter(product => !removedProductNames.has(product.name)));
     if (data.Sales.length) setSales(data.Sales as unknown as Sale[]);
     if (data.RetailSales.length) setRetailSales(data.RetailSales as unknown as RetailSale[]);

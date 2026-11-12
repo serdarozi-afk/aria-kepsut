@@ -1,5 +1,5 @@
 import { Fragment, useState } from "react";
-import { ChevronDown, FileDown } from "lucide-react";
+import { ChevronDown, FileDown, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Collection, Customer, Sale } from "@/pages/Index";
 
@@ -10,6 +10,10 @@ const AccountSummary = ({ customer, sales, collections, onDownload }: Props) => 
   const [expandedDates, setExpandedDates] = useState<string[]>([]);
   const salesTotal = sales.reduce((sum, sale) => sum + sale.total, 0);
   const collectionsTotal = collections.reduce((sum, item) => sum + item.amount, 0);
+  const whatsappMessage = `Aria Kepsut Yem Hesap Özeti\nMüşteri: ${customer.name}\nToplam satış: ${money(salesTotal)}\nToplam tahsilat: ${money(collectionsTotal)}\nBakiye: ${money(salesTotal - collectionsTotal)}`;
+  const phoneDigits = customer.phone.replace(/\D/g, "");
+  const whatsappPhone = phoneDigits.startsWith("90") ? phoneDigits : phoneDigits.startsWith("0") ? `90${phoneDigits.slice(1)}` : `90${phoneDigits}`;
+  const whatsappUrl = `https://wa.me/${whatsappPhone}?text=${encodeURIComponent(whatsappMessage)}`;
   const salesByDate = Object.entries(sales.reduce<Record<string, Sale[]>>((groups, sale) => {
     (groups[sale.date] ??= []).push(sale);
     return groups;
@@ -34,7 +38,7 @@ const AccountSummary = ({ customer, sales, collections, onDownload }: Props) => 
       </Fragment>;
     })}</tbody></table></div></div>}</section>
     <section><h3 className="mb-2 text-sm font-semibold">Tahsilatlar</h3>{collections.length === 0 ? <p className="rounded-lg bg-[#fafbfa] p-3 text-xs text-[#8b9a95]">Bu müşteri için kayıtlı tahsilat yok.</p> : <div className="max-h-52 overflow-auto rounded-xl border border-[#edf0ee]"><table className="w-full min-w-[360px] text-left text-xs"><thead className="sticky top-0 bg-[#fafbfa] text-[#83918c]"><tr><th className="p-2.5">Tarih</th><th className="p-2.5">Ödeme türü</th><th className="p-2.5">Tutar</th></tr></thead><tbody>{collections.map(item => <tr key={item.id} className="border-t border-[#f0f2f1]"><td className="p-2.5">{item.date}</td><td className="p-2.5">{item.method}</td><td className="p-2.5 font-medium">{money(item.amount)}</td></tr>)}</tbody></table></div>}</section>
-    <Button onClick={onDownload} className="w-full rounded-xl bg-[#247b78] hover:bg-[#1c6966]"><FileDown size={16} className="mr-2"/>PDF oluştur</Button>
+    <div className="grid gap-2 sm:grid-cols-2"><Button asChild className="w-full rounded-xl bg-[#20a65a] hover:bg-[#168a49]"><a href={whatsappUrl} target="_blank" rel="noopener noreferrer"><MessageCircle size={16} className="mr-2"/>WhatsApp’tan hesap özeti gönder</a></Button><Button onClick={onDownload} className="w-full rounded-xl bg-[#247b78] hover:bg-[#1c6966]"><FileDown size={16} className="mr-2"/>PDF oluştur</Button></div>
   </div>;
 };
 
