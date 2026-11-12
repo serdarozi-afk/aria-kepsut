@@ -18,10 +18,11 @@ test("ürün kataloğu satış ve depo akışlarının ortak kaynağıdır", asy
   await page.getByRole("button", { name: "Perakende satış" }).click();
   await page.getByLabel("Perakende ürün").selectOption({ label: "Test Ürünü · Stok: 8" });
   await page.getByLabel("Perakende satış adedi").fill("3");
+  await page.getByLabel("Perakende birim fiyatı").fill("900");
   await page.getByRole("button", { name: "Satışı tamamla" }).click();
   await expect(page.getByText("5 adet")).toBeVisible();
 
   await page.getByRole("button", { name: "Raporlar" }).click();
   await expect(page.getByText("Aylık perakende satış")).toBeVisible();
-  await expect(page.getByText("₺3.000,00").first()).toBeVisible();
+  await expect(page.getByText("₺2.700,00").first()).toBeVisible();
 });
