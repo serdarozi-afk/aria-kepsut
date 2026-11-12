@@ -7,6 +7,8 @@ import GoogleSheetsGate from "@/components/GoogleSheetsGate";
 
 type AuthContextValue = { user: User | null; signOutUser: () => Promise<void> };
 const AuthContext = createContext<AuthContextValue | null>(null);
+const allowedGoogleEmails = new Set((import.meta.env.VITE_ALLOWED_GOOGLE_EMAILS || "").split(",").map(email => email.trim().toLowerCase()).filter(Boolean));
+const unauthorizedMessage = "Bu Google hesabına giriş izni verilmemiş. Yetkili hesapla tekrar deneyin.";
 
 export const useFirebaseUser = () => {
   const value = useContext(AuthContext);
@@ -23,7 +25,17 @@ const FirebaseAuthGate = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     if (!firebaseAuth) { setLoading(false); return; }
-    return onAuthStateChanged(firebaseAuth, nextUser => { setUser(nextUser); setLoading(false); });
+    return onAuthStateChanged(firebaseAuth, nextUser => {
+      if (nextUser && (!nextUser.email || !allowedGoogleEmails.has(nextUser.email.toLowerCase()))) {
+        setUser(null);
+        setSignInError(unauthorizedMessage);
+        void signOut(firebaseAuth);
+      } else {
+        setUser(nextUser);
+        if (nextUser) setSignInError("");
+      }
+      setLoading(false);
+    });
   }, []);
 
   const signOutUser = async () => {
@@ -33,7 +45,11 @@ const FirebaseAuthGate = ({ children }: { children: ReactNode }) => {
     if (!firebaseAuth) return;
     setSignInError("");
     try {
-      await signInWithPopup(firebaseAuth, new GoogleAuthProvider());
+      const result = await signInWithPopup(firebaseAuth, new GoogleAuthProvider());
+      if (!result.user.email || !allowedGoogleEmails.has(result.user.email.toLowerCase())) {
+        await signOut(firebaseAuth);
+        setSignInError(unauthorizedMessage);
+      }
     } catch (error) {
       const code = (error as { code?: string }).code;
       setSignInError(code === "auth/popup-closed-by-user" ? "Giriş penceresi kapatıldı. Yeniden deneyebilirsiniz." : code === "auth/unauthorized-domain" ? "Bu uygulama adresi Firebase yetkili alan adlarına eklenmeli." : "Google ile giriş tamamlanamadı. Firebase Google sağlayıcısını ve proje ayarlarını kontrol edin.");
