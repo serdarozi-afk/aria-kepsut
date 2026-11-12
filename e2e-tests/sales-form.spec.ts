@@ -8,6 +8,7 @@ test("creates a sale using an existing customer and catalog product", async ({ p
   await page.getByLabel("Ürün adı").selectOption({ label: "Danışmanlık Paketi" });
   await page.getByLabel("Adet").fill("2");
 
+  await expect(page.getByLabel("Satış tarihi")).toHaveValue(/^\d{4}-\d{2}-\d{2}$/);
   await expect(page.getByText("₺25.000,00")).toBeVisible();
   await page.getByRole("button", { name: "Satışı kaydet" }).click();
 

@@ -6,6 +6,7 @@ test("records a collection for a registered customer", async ({ page }) => {
 
   await page.getByLabel("Tahsilat müşteri adı").selectOption({ label: "Selin Yılmaz" });
   await page.getByLabel("Ödeme türü").selectOption("Havale");
+  await expect(page.getByLabel("Tahsilat tarihi")).toHaveValue(/^\d{4}-\d{2}-\d{2}$/);
   await page.getByLabel("Tahsilat tutarı").fill("3250");
   await page.getByRole("button", { name: "Tahsilatı kaydet" }).click();
 
