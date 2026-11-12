@@ -15,10 +15,10 @@ test("adds a customer with identity and contact details", async ({ page }) => {
   await expect(newCustomerRow.getByRole("cell", { name: "₺0,00" })).toBeVisible();
 });
 
-test("exports all customer balances", async ({ page }) => {
+test("exports all customer balances as a PDF", async ({ page }) => {
   await page.goto("/");
   const downloadPromise = page.waitForEvent("download");
   await page.getByRole("button", { name: "Tüm Bakiyeler" }).click();
   const download = await downloadPromise;
-  expect(download.suggestedFilename()).toBe("tum-bakiyeler.csv");
+  expect(download.suggestedFilename()).toBe("tum-bakiyeler.pdf");
 });
