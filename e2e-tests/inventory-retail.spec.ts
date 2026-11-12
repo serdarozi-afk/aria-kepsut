@@ -1,13 +1,18 @@
 import { expect, test } from "@playwright/test";
 
-test("depo ürünü perakende satışla azalır ve aylık rapora eklenir", async ({ page }) => {
+test("ürün kataloğu satış ve depo akışlarının ortak kaynağıdır", async ({ page }) => {
   await page.goto("/");
-  await page.getByRole("button", { name: "Depo" }).click();
+  await page.getByRole("button", { name: "Ürünler" }).click();
   await page.getByRole("button", { name: "Ürün ekle" }).click();
-  await page.getByLabel("Depo ürün adı").fill("Test Ürünü");
-  await page.getByLabel("Depo ürün fiyatı").fill("1000");
-  await page.getByLabel("Depo ürün adedi").fill("8");
-  await page.getByRole("button", { name: "Ürünü depoya ekle" }).click();
+  await page.getByLabel("Yeni ürün adı").fill("Test Ürünü");
+  await page.getByLabel("Yeni ürün fiyatı").fill("1000");
+  await page.getByRole("button", { name: "Ürünü listeye ekle" }).click();
+
+  await page.getByRole("button", { name: "Depo" }).click();
+  await page.getByRole("button", { name: "Depoya stok ekle" }).click();
+  await page.getByLabel("Stok eklenecek ürün").selectOption({ label: "Test Ürünü · Mevcut stok: 0" });
+  await page.getByLabel("Eklenecek stok adedi").fill("8");
+  await page.getByRole("button", { name: "Depo stoğunu güncelle" }).click();
   await expect(page.getByText("8 adet")).toBeVisible();
 
   await page.getByRole("button", { name: "Perakende satış" }).click();

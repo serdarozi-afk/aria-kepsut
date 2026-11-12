@@ -61,7 +61,6 @@ const Index = () => {
   const [newPhone, setNewPhone] = useState("");
   const [productName, setProductName] = useState("");
   const [productPrice, setProductPrice] = useState("");
-  const [productStock, setProductStock] = useState("");
   const [saleCustomer, setSaleCustomer] = useState("");
   const [saleProduct, setSaleProduct] = useState("");
   const [quantity, setQuantity] = useState("1");
@@ -86,8 +85,8 @@ const Index = () => {
   const addCustomer = () => { if (!newName.trim() || !newSurname.trim() || !newAddress.trim() || newTckn.length !== 11 || !newPhone.trim()) return; const fullName = `${newName.trim()} ${newSurname.trim()}`; setCustomers([{ id: Date.now(), name: fullName, company: "", address: newAddress.trim(), tckn: newTckn.trim(), email: "—", phone: newPhone.trim(), status: "Yeni aday", value: "₺0", date: "Bugün", initials: fullName.split(" ").map(s => s[0]).join("").slice(0, 2).toUpperCase(), color: "bg-[#dce9e5]" }, ...customers]); setNewName(""); setNewSurname(""); setNewAddress(""); setNewTckn(""); setNewPhone(""); setShowAdd(false); };
   const chooseProduct = (id: string) => { setSaleProduct(id); const product = products.find(p => String(p.id) === id); setUnitPrice(product ? String(product.price) : ""); };
   const addSale = () => { const customer = customers.find(c => String(c.id) === saleCustomer); const product = products.find(p => String(p.id) === saleProduct); const qty = Number(quantity); const price = Number(unitPrice); if (!customer || !product || !Number.isFinite(qty) || qty < 1 || !Number.isFinite(price) || price < 0) return; setSales([{ id: Date.now(), customer: customer.name, product: product.name, quantity: qty, unitPrice: price, total: qty * price, date: formatDateDmy(saleDate) }, ...sales]); setSaleCustomer(""); setSaleProduct(""); setQuantity("1"); setUnitPrice(""); };
-  const addProduct = () => { const price = Number(productPrice); const stock = Number(productStock); if (!productName.trim() || !Number.isFinite(price) || price < 0 || !Number.isInteger(stock) || stock < 0) return; setProducts([...products, { id: Date.now(), name: productName.trim(), price, stock }]); setProductName(""); setProductPrice(""); setProductStock(""); setShowAddProduct(false); };
-  const addDepotProduct = (name: string, price: number, stock: number) => setProducts(current => [...current, { id: Date.now(), name, price, stock }]);
+  const addProduct = () => { const price = Number(productPrice); if (!productName.trim() || !Number.isFinite(price) || price < 0) return; setProducts([...products, { id: Date.now(), name: productName.trim(), price, stock: 0 }]); setProductName(""); setProductPrice(""); setShowAddProduct(false); };
+  const addDepotProduct = (productId: number, amount: number) => { if (!Number.isInteger(amount) || amount < 1) return; setProducts(current => current.map(item => item.id === productId ? { ...item, stock: item.stock + amount } : item)); };
   const addRetailSale = (productId: number, qty: number, date: string) => { const product = products.find(item => item.id === productId); if (!product || !Number.isInteger(qty) || qty < 1 || qty > product.stock) return; setProducts(current => current.map(item => item.id === productId ? { ...item, stock: item.stock - qty } : item)); setRetailSales(current => [{ id: Date.now(), product: product.name, quantity: qty, unitPrice: product.price, total: qty * product.price, date: formatDateDmy(date), month: date.slice(0, 7) }, ...current]); };
   const addCollection = () => { const customer = customers.find(c => String(c.id) === collectionCustomer); const amount = Number(collectionAmount); if (!customer || !collectionMethod || !Number.isFinite(amount) || amount <= 0) return; setCollections([{ id: Date.now(), customer: customer.name, method: collectionMethod, amount, date: formatDateDmy(collectionDate) }, ...collections]); setCollectionCustomer(""); setCollectionMethod(""); setCollectionAmount(""); };
   const createAccountPdf = (customer: Customer) => {
@@ -130,7 +129,7 @@ const Index = () => {
     }
     pdf.save("tum-bakiyeler.pdf");
   };
-  const nav = [{ label: "Müşteriler", icon: Users }, { label: "Depo", icon: Package }, { label: "Satışlar", icon: ShoppingCart }, { label: "Tahsilatlar", icon: Wallet }, { label: "Raporlar", icon: BarChart3 }, { label: "Sohbet", icon: MessageCircle }, { label: "Yapılacak İşler", icon: LayoutDashboard }];
+  const nav = [{ label: "Müşteriler", icon: Users }, { label: "Depo", icon: Package }, { label: "Satışlar", icon: ShoppingCart }, { label: "Tahsilatlar", icon: Wallet }, { label: "Raporlar", icon: BarChart3 }, { label: "Sohbet", icon: MessageCircle }, { label: "Yapılacak İşler", icon: LayoutDashboard }, { label: "Ürünler", icon: Package }];
   const selectClass = "mt-1.5 h-10 w-full rounded-xl border border-[#e4ebe7] bg-white px-3 text-[13px] text-[#394d46] outline-none focus:border-[#76aaa0] focus:ring-2 focus:ring-[#247b78]/10";
   return <div className="min-h-screen bg-[#f7f8f6] text-[#263634]">
     <aside className={`${mobileMenu ? "translate-x-0" : "-translate-x-full"} fixed inset-y-0 left-0 z-30 flex w-[250px] flex-col border-r border-[#e9eeeb] bg-white px-5 py-6 transition-transform md:translate-x-0`}>
