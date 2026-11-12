@@ -9,6 +9,7 @@ import TeamChat from "@/components/TeamChat";
 import InventoryPage from "@/components/InventoryPage";
 import ReportsPage from "@/components/ReportsPage";
 import { useFirebaseUser } from "@/components/FirebaseAuthGate";
+import { useGoogleSheets } from "@/components/GoogleSheetsGate";
 
 export type Customer = { id: number; name: string; company: string; address: string; tckn: string; email: string; phone: string; status: string; value: string; date: string; initials: string; color: string };
 export type Product = { id: number; name: string; price: number; stock: number };
@@ -37,10 +38,12 @@ const AccountSummary = ({ customer, sales, collections, onDownload }: AccountSum
 
 const Index = () => {
   const { user, signOutUser } = useFirebaseUser();
+  const { data, saveTable } = useGoogleSheets();
+  const [sheetsLoaded, setSheetsLoaded] = useState(false);
   const [customers, setCustomers] = useState(seed);
-  const [products, setProducts] = useState<Product[]>(() => JSON.parse(localStorage.getItem("aria-depot-products") || JSON.stringify(initialProducts)) as Product[]);
+  const [products, setProducts] = useState<Product[]>(initialProducts);
   const [sales, setSales] = useState<Sale[]>([]);
-  const [retailSales, setRetailSales] = useState<RetailSale[]>(() => JSON.parse(localStorage.getItem("aria-retail-sales") || "[]") as RetailSale[]);
+  const [retailSales, setRetailSales] = useState<RetailSale[]>([]);
   const [collections, setCollections] = useState<Collection[]>([]);
   const [collectionCustomer, setCollectionCustomer] = useState("");
   const [collectionMethod, setCollectionMethod] = useState("");
@@ -66,8 +69,19 @@ const Index = () => {
   const [saleDate, setSaleDate] = useState(new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,10));
   const [collectionDate, setCollectionDate] = useState(new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,10));
   const [mobileMenu, setMobileMenu] = useState(false);
-  useEffect(() => { localStorage.setItem("aria-depot-products", JSON.stringify(products)); }, [products]);
-  useEffect(() => { localStorage.setItem("aria-retail-sales", JSON.stringify(retailSales)); }, [retailSales]);
+  useEffect(() => {
+    setCustomers(data.Customers.length ? data.Customers as unknown as Customer[] : seed);
+    if (data.Products.length) setProducts(data.Products as unknown as Product[]);
+    if (data.Sales.length) setSales(data.Sales as unknown as Sale[]);
+    if (data.RetailSales.length) setRetailSales(data.RetailSales as unknown as RetailSale[]);
+    if (data.Collections.length) setCollections(data.Collections as unknown as Collection[]);
+    setSheetsLoaded(true);
+  }, [data]);
+  useEffect(() => { if (sheetsLoaded) saveTable("Customers", customers); }, [customers, saveTable, sheetsLoaded]);
+  useEffect(() => { if (sheetsLoaded) saveTable("Products", products); }, [products, saveTable, sheetsLoaded]);
+  useEffect(() => { if (sheetsLoaded) saveTable("Sales", sales); }, [sales, saveTable, sheetsLoaded]);
+  useEffect(() => { if (sheetsLoaded) saveTable("RetailSales", retailSales); }, [retailSales, saveTable, sheetsLoaded]);
+  useEffect(() => { if (sheetsLoaded) saveTable("Collections", collections); }, [collections, saveTable, sheetsLoaded]);
   const visible = useMemo(() => customers.filter(c => (filter === "Tümü" || c.status === filter) && `${c.name} ${c.address} ${c.tckn} ${c.phone}`.toLowerCase().includes(query.toLowerCase())), [customers, filter, query]);
   const addCustomer = () => { if (!newName.trim() || !newSurname.trim() || !newAddress.trim() || newTckn.length !== 11 || !newPhone.trim()) return; const fullName = `${newName.trim()} ${newSurname.trim()}`; setCustomers([{ id: Date.now(), name: fullName, company: "", address: newAddress.trim(), tckn: newTckn.trim(), email: "—", phone: newPhone.trim(), status: "Yeni aday", value: "₺0", date: "Bugün", initials: fullName.split(" ").map(s => s[0]).join("").slice(0, 2).toUpperCase(), color: "bg-[#dce9e5]" }, ...customers]); setNewName(""); setNewSurname(""); setNewAddress(""); setNewTckn(""); setNewPhone(""); setShowAdd(false); };
   const chooseProduct = (id: string) => { setSaleProduct(id); const product = products.find(p => String(p.id) === id); setUnitPrice(product ? String(product.price) : ""); };

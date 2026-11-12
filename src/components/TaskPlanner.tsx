@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight, Plus, StickyNote, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useGoogleSheets } from "@/components/GoogleSheetsGate";
 
 type PlannerNote = { id: number; date: string; text: string };
 
@@ -10,15 +11,14 @@ const localDateKey = (date: Date) => {
 };
 
 const TaskPlanner = () => {
+  const { data, saveTable } = useGoogleSheets();
   const today = localDateKey(new Date());
-  const [notes, setNotes] = useState<PlannerNote[]>(() => JSON.parse(localStorage.getItem("aria-kepsut-planner-notes") || "[]") as PlannerNote[]);
+  const [notes, setNotes] = useState<PlannerNote[]>(() => data.PlannerNotes as unknown as PlannerNote[]);
   const [selectedDate, setSelectedDate] = useState(today);
   const [month, setMonth] = useState(() => new Date(new Date().getFullYear(), new Date().getMonth(), 1));
   const [noteText, setNoteText] = useState("");
 
-  useEffect(() => {
-    localStorage.setItem("aria-kepsut-planner-notes", JSON.stringify(notes));
-  }, [notes]);
+  useEffect(() => { saveTable("PlannerNotes", notes); }, [notes, saveTable]);
 
   const monthLabel = month.toLocaleDateString("tr-TR", { month: "long", year: "numeric" });
   const firstWeekday = (new Date(month.getFullYear(), month.getMonth(), 1).getDay() + 6) % 7;
