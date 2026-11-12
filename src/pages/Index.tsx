@@ -95,7 +95,7 @@ const Index = () => {
   const addDepotProduct = (productId: number, amount: number) => { if (!Number.isInteger(amount) || amount < 1) return; setProducts(current => current.map(item => item.id === productId ? { ...item, stock: item.stock + amount } : item)); };
   const addRetailSale = (productId: number, qty: number, unitPrice: number, date: string) => { const product = products.find(item => item.id === productId); if (!product || !Number.isInteger(qty) || qty < 1 || qty > product.stock || !Number.isFinite(unitPrice) || unitPrice < 0) return; setProducts(current => current.map(item => item.id === productId ? { ...item, stock: item.stock - qty } : item)); setRetailSales(current => [{ id: Date.now(), product: product.name, quantity: qty, unitPrice, total: qty * unitPrice, date: formatDateDmy(date), month: date.slice(0, 7) }, ...current]); };
   const addCollection = () => { const customer = customers.find(c => String(c.id) === collectionCustomer); const amount = Number(collectionAmount); if (!customer || !collectionMethod || !Number.isFinite(amount) || amount <= 0) return; setCollections([{ id: Date.now(), customer: customer.name, method: collectionMethod, amount, date: formatDateDmy(collectionDate) }, ...collections]); setCollectionCustomer(""); setCollectionMethod(""); setCollectionAmount(""); };
-  const createAccountPdf = (customer: Customer) => {
+  const createAccountPdf = async (customer: Customer) => {
     const pdf = new jsPDF();
     const ascii = (value: string) => value.replace(/₺/g, "TL").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/ı/g, "i").replace(/İ/g, "I");
     const customerSales = sales.filter(sale => sale.customer === customer.name);
@@ -106,8 +106,9 @@ const Index = () => {
     pdf.setFont("helvetica", "normal"); pdf.setFontSize(16); pdf.setTextColor(25, 25, 25); pdf.text("ARIA KEPSUT", 13, 16);
     pdf.setFontSize(9); pdf.text(ascii("Hesap Ozeti"), 13, 27); pdf.text(ascii(`Musteri: ${customer.name}`), 13, 37);
     pdf.text(ascii(`Adres: ${customer.address}`), 13, 46); pdf.text(`TCKN: ${customer.tckn}`, 13, 55); pdf.text(ascii(`Cep tel: ${customer.phone}`), 13, 64);
-    pdf.setFont("helvetica", "bold"); pdf.setFontSize(27); pdf.setTextColor(55, 170, 48); pdf.text("ARIA", 92, 34);
-    pdf.setTextColor(0, 0, 0); pdf.text("YEM", 145, 34); pdf.setFontSize(11); pdf.text(ascii("ONCE GUVEN"), 132, 43);
+    const logoBlob = await fetch("/aria-logo.png").then(response => response.blob());
+    const logoData = await new Promise<string>(resolve => { const reader = new FileReader(); reader.onload = () => resolve(reader.result as string); reader.readAsDataURL(logoBlob); });
+    pdf.addImage(logoData, "PNG", 112, 20, 78, 38.5);
 
     let y = 77;
     const drawTable = (title: string, headers: string[], widths: number[], rows: string[][], totalLabel: string, totalValue: string) => {
@@ -174,7 +175,7 @@ const Index = () => {
   const selectClass = "mt-1.5 h-10 w-full rounded-xl border border-[#e4ebe7] bg-white px-3 text-[13px] text-[#394d46] outline-none focus:border-[#76aaa0] focus:ring-2 focus:ring-[#247b78]/10";
   return <div className="min-h-screen bg-[#f7f8f6] text-[#263634]">
     <aside className={`${mobileMenu ? "translate-x-0" : "-translate-x-full"} fixed inset-y-0 left-0 z-30 flex w-[250px] flex-col border-r border-[#e9eeeb] bg-white px-5 py-6 transition-transform md:translate-x-0`}>
-      <div className="mb-10 flex items-center gap-3 px-1"><img src="/aria-logo.png" alt="ARIA" className="h-10 w-14 rounded-lg bg-black object-contain"/><div><div className="font-serif text-[19px] font-semibold tracking-tight">ARIA KEPSUT</div><div className="text-[10px] font-semibold uppercase tracking-[.17em] text-[#96a5a0]">CRM WORKSPACE</div></div></div>
+      <div className="mb-10 flex items-center gap-3 px-1"><img src="/aria-logo.png" alt="ARIA YEM — Önce Güven" className="h-10 w-20 shrink-0 object-contain"/><div><div className="font-serif text-[19px] font-semibold tracking-tight">ARIA KEPSUT</div><div className="text-[10px] font-semibold uppercase tracking-[.17em] text-[#96a5a0]">CRM WORKSPACE</div></div></div>
       <p className="mb-3 px-2 text-[10px] font-bold uppercase tracking-[.16em] text-[#a4b0ac]">ÇALIŞMA ALANI</p><nav className="space-y-1">{nav.map(({label, icon: Icon})=><button key={label} onClick={()=>{setActiveNav(label);setMobileMenu(false)}} className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-medium transition ${activeNav===label?"bg-[#eaf3f1] text-[#247b78]":"text-[#687874] hover:bg-[#f5f8f7] hover:text-[#334541]"}`}><Icon size={17}/>{label}{label==="Müşteriler"&&<span className="ml-auto rounded-md bg-white px-2 py-0.5 text-[10px] text-[#8a9a95]">{customers.length}</span>}{label==="Depo"&&<span className="ml-auto rounded-md bg-white px-2 py-0.5 text-[10px] text-[#8a9a95]">{products.length}</span>}</button>)}</nav>
       <div className="mt-9"><p className="mb-3 px-2 text-[10px] font-bold uppercase tracking-[.16em] text-[#a4b0ac]">YÖNETİM</p><button onClick={()=>setActiveNav("Ayarlar")} className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-medium text-[#687874] hover:bg-[#f5f8f7]"><Settings size={17}/>Ayarlar</button></div>
       <div className="mt-auto rounded-2xl border border-[#e7eeea] bg-[#f8faf8] p-4"><div className="mb-3 flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-[#52a486]"/><span className="text-[11px] font-semibold text-[#58706a]">İzinli ekip</span></div><div className="flex -space-x-2"><span className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-[#e8d9ce] text-[9px] font-bold">SO</span><span className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-[#d6e7df] text-[9px] font-bold">VE</span></div><p className="mt-3 text-[10px] leading-relaxed text-[#8c9a95]">Yalnızca Serdarozi ve Vetiso ekibe erişebilir.</p></div>
