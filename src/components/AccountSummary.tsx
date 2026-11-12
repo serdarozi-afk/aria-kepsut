@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import type { Collection, Customer, Sale } from "@/pages/Index";
 
 type Props = { customer: Customer; sales: Sale[]; collections: Collection[]; onDownload: () => void };
-const money = (value: number) => new Intl.NumberFormat("tr-TR", { style: "currency", currency: "TRY", maximumFractionDigits: 2 }).format(value);
+const money = (value: number) => `${new Intl.NumberFormat("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value)} TL`;
 
 const AccountSummary = ({ customer, sales, collections, onDownload }: Props) => {
   const [expandedDates, setExpandedDates] = useState<string[]>([]);

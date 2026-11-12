@@ -27,30 +27,15 @@ const seed: Customer[] = [
 ];
 const removedProductNames = new Set(["Danışmanlık Paketi", "Kurumsal Lisans", "Başlangıç Paketi"]);
 const statusTone: Record<string, string> = { "Aktif müşteri": "bg-[#e7f3ee] text-[#28785d]", "Teklif gönderildi": "bg-[#fff2dc] text-[#a66a12]", "Yeni aday": "bg-[#e9effb] text-[#4968a3]", "Görüşme planlandı": "bg-[#f0eafb] text-[#7858a5]" };
-const money = (value: number) => new Intl.NumberFormat("tr-TR", { style: "currency", currency: "TRY", maximumFractionDigits: 2 }).format(value);
+const money = (value: number) => `${new Intl.NumberFormat("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value)} TL`;
 const normalizePhone = (phone: string) => {
   const digits = phone.replace(/\D/g, "");
   const nationalNumber = digits.startsWith("0090") ? digits.slice(4) : digits.startsWith("90") ? digits.slice(2) : digits.startsWith("0") ? digits.slice(1) : digits;
   return nationalNumber ? `+90 ${nationalNumber}` : "";
 };
-const drawPdfTextWithLira = (pdf: jsPDF, value: string, x: number, y: number, maxWidth: number) => {
-  let cursor = x;
-  const chunks = value.split("₺");
-  chunks.forEach((chunk, index) => {
-    const text = chunk.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/ı/g, "i").replace(/İ/g, "I");
-    if (text) {
-      pdf.text(text, cursor, y, { maxWidth: Math.max(1, x + maxWidth - cursor) });
-      cursor += pdf.getTextWidth(text);
-    }
-    if (index < chunks.length - 1) {
-      pdf.setLineWidth(0.35);
-      pdf.line(cursor + 0.8, y - 2.4, cursor + 1.1, y + 1.2);
-      pdf.line(cursor + 1.1, y + 1.2, cursor + 3.3, y - 1.5);
-      pdf.line(cursor + 0.2, y - 0.1, cursor + 3.1, y - 0.1);
-      pdf.line(cursor, y + 1, cursor + 2.9, y + 1);
-      cursor += 4;
-    }
-  });
+const drawPdfText = (pdf: jsPDF, value: string, x: number, y: number, maxWidth: number) => {
+  const text = value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/ı/g, "i").replace(/İ/g, "I");
+  pdf.text(text, x, y, { maxWidth });
 };
 const formatDateDmy = (isoDate: string) => isoDate.split("-").reverse().join("/");
 const todayDateDmy = () => formatDateDmy(new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10));
@@ -158,7 +143,7 @@ const Index = () => {
         row.forEach((cell, index) => {
           pdf.setFillColor(rowIndex % 2 === 0 ? 218 : 255, rowIndex % 2 === 0 ? 241 : 255, rowIndex % 2 === 0 ? 211 : 255);
           pdf.setDrawColor(0, 0, 0); pdf.rect(x, y, widths[index], rowHeight, "FD");
-          pdf.setFont("helvetica", "normal"); pdf.setFontSize(7.5); pdf.setTextColor(0, 0, 0); drawPdfTextWithLira(pdf, cell, x + 1.5, y + 4.4, widths[index] - 3); x += widths[index];
+          pdf.setFont("helvetica", "normal"); pdf.setFontSize(7.5); pdf.setTextColor(0, 0, 0); drawPdfText(pdf, cell, x + 1.5, y + 4.4, widths[index] - 3); x += widths[index];
         });
         y += rowHeight;
       });
@@ -169,7 +154,7 @@ const Index = () => {
       pdf.setFillColor(220, 220, 220); pdf.rect(labelX, y, labelWidth, rowHeight, "FD");
       pdf.rect(labelX + labelWidth, y, widths[widths.length - 1], rowHeight, "FD");
       pdf.setFont("helvetica", "bold"); pdf.setFontSize(8); pdf.setTextColor(0, 0, 0);
-      pdf.text(ascii(totalLabel), labelX + 1.5, y + 4.4); drawPdfTextWithLira(pdf, totalValue, labelX + labelWidth + 1.5, y + 4.4, widths[widths.length - 1] - 3);
+      pdf.text(ascii(totalLabel), labelX + 1.5, y + 4.4); drawPdfText(pdf, totalValue, labelX + labelWidth + 1.5, y + 4.4, widths[widths.length - 1] - 3);
       y += rowHeight + 10;
     };
 
@@ -191,7 +176,7 @@ const Index = () => {
       const totalSales = sales.filter(sale => sale.customer === customer.name).reduce((sum, sale) => sum + sale.total, 0);
       const totalCollections = collections.filter(item => item.customer === customer.name).reduce((sum, item) => sum + item.amount, 0);
       const row = [customer.name, customer.phone, money(totalSales), money(totalCollections), money(totalSales - totalCollections)];
-      row.forEach((value, index) => drawPdfTextWithLira(pdf, value, positions[index], y, index === 0 ? 40 : 36));
+      row.forEach((value, index) => drawPdfText(pdf, value, positions[index], y, index === 0 ? 40 : 36));
       y += 7;
     }
     pdf.save("tum-bakiyeler.pdf");

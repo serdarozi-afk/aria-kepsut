@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import type { Collection, RetailSale, Sale } from "@/pages/Index";
 
 type ReportsPageProps = { sales: Sale[]; collections: Collection[]; retailSales: RetailSale[] };
-const money = (value: number) => new Intl.NumberFormat("tr-TR", { style: "currency", currency: "TRY", maximumFractionDigits: 2 }).format(value);
+const money = (value: number) => `${new Intl.NumberFormat("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value)} TL`;
 const currentMonth = () => new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 7);
 
 const ReportsPage = ({ sales, collections, retailSales }: ReportsPageProps) => {

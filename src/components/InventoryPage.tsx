@@ -11,7 +11,7 @@ type InventoryPageProps = {
   onAddProduct: (productId: number, quantity: number) => void;
   onRetailSale: (productId: number, quantity: number, unitPrice: number, date: string) => void;
 };
-const money = (value: number) => new Intl.NumberFormat("tr-TR", { style: "currency", currency: "TRY", maximumFractionDigits: 2 }).format(value);
+const money = (value: number) => `${new Intl.NumberFormat("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value)} TL`;
 const todayIso = () => new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
 const inputClass = "mt-1.5 h-10 w-full rounded-xl border border-[#e4ebe7] bg-white px-3 text-[13px] text-[#394d46] outline-none focus:border-[#76aaa0]";
 
