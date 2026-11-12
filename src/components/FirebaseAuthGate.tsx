@@ -7,7 +7,11 @@ import GoogleSheetsGate from "@/components/GoogleSheetsGate";
 
 type AuthContextValue = { user: User | null; signOutUser: () => Promise<void> };
 const AuthContext = createContext<AuthContextValue | null>(null);
-const allowedGoogleEmails = new Set((import.meta.env.VITE_ALLOWED_GOOGLE_EMAILS || "").split(",").map(email => email.trim().toLowerCase()).filter(Boolean));
+const allowedGoogleEmails = new Set([
+  "serdarozi@gmail.com",
+  "vetiso1987@gmail.com",
+  ...(import.meta.env.VITE_ALLOWED_GOOGLE_EMAILS || "").split(",").map(email => email.trim().toLowerCase()).filter(Boolean),
+]);
 const unauthorizedMessage = "Bu Google hesabına giriş izni verilmemiş. Yetkili hesapla tekrar deneyin.";
 
 export const useFirebaseUser = () => {
