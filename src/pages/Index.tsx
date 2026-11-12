@@ -30,6 +30,8 @@ const statusTone: Record<string, string> = { "Aktif müşteri": "bg-[#e7f3ee] te
 const money = (value: number) => new Intl.NumberFormat("tr-TR", { style: "currency", currency: "TRY", maximumFractionDigits: 2 }).format(value);
 const formatDateDmy = (isoDate: string) => isoDate.split("-").reverse().join("/");
 const todayDateDmy = () => formatDateDmy(new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10));
+const customerAvatarColors = ["bg-[#e7d9cd]", "bg-[#dbe8dd]", "bg-[#efe1bd]", "bg-[#d9e5ed]", "bg-[#e8dce9]", "bg-[#e9d8d4]", "bg-[#dce9e5]", "bg-[#dbe3f4]"];
+const customerInitials = (name: string) => name.trim().split(/\s+/).slice(0, 2).map(part => part[0] || "").join("").toLocaleUpperCase("tr-TR");
 type AccountSummaryProps = { customer: Customer; sales: Sale[]; collections: Collection[]; onDownload: () => void };
 const LegacyAccountSummary = ({ customer, sales, collections, onDownload }: AccountSummaryProps) => {
   const salesTotal = sales.reduce((sum, sale) => sum + sale.total, 0);
@@ -85,7 +87,7 @@ const Index = () => {
   useEffect(() => { if (sheetsLoaded) saveTable("Sales", sales); }, [sales, saveTable, sheetsLoaded]);
   useEffect(() => { if (sheetsLoaded) saveTable("RetailSales", retailSales); }, [retailSales, saveTable, sheetsLoaded]);
   useEffect(() => { if (sheetsLoaded) saveTable("Collections", collections); }, [collections, saveTable, sheetsLoaded]);
-  const visible = useMemo(() => customers.filter(c => (filter === "Tümü" || c.status === filter) && `${c.name} ${c.address} ${c.tckn} ${c.phone}`.toLowerCase().includes(query.toLowerCase())), [customers, filter, query]);
+  const visible = useMemo(() => customers.map((customer, index) => ({ ...customer, initials: customerInitials(customer.name), color: customerAvatarColors[index % customerAvatarColors.length] })).filter(c => (filter === "Tümü" || c.status === filter) && `${c.name} ${c.address} ${c.tckn} ${c.phone}`.toLowerCase().includes(query.toLowerCase())), [customers, filter, query]);
   const addCustomer = () => { if (!newName.trim() || !newSurname.trim() || !newAddress.trim() || newTckn.length !== 11 || !newPhone.trim()) return; const fullName = `${newName.trim()} ${newSurname.trim()}`; setCustomers([{ id: Date.now(), name: fullName, company: "", address: newAddress.trim(), tckn: newTckn.trim(), email: "—", phone: newPhone.trim(), status: "Yeni aday", value: "₺0", date: "Bugün", initials: fullName.split(" ").map(s => s[0]).join("").slice(0, 2).toUpperCase(), color: "bg-[#dce9e5]" }, ...customers]); setNewName(""); setNewSurname(""); setNewAddress(""); setNewTckn(""); setNewPhone(""); setShowAdd(false); };
   const chooseProduct = (id: string) => { setSaleProduct(id); const product = products.find(p => String(p.id) === id); setUnitPrice(product ? String(product.price) : ""); };
   const addSale = () => { const customer = customers.find(c => String(c.id) === saleCustomer); const product = products.find(p => String(p.id) === saleProduct); const qty = Number(quantity); const price = Number(unitPrice); if (!customer || !product || !Number.isFinite(qty) || qty < 1 || !Number.isFinite(price) || price < 0) return; setSales([{ id: Date.now(), customer: customer.name, product: product.name, quantity: qty, unitPrice: price, total: qty * price, date: formatDateDmy(saleDate) }, ...sales]); setSaleCustomer(""); setSaleProduct(""); setQuantity("1"); setUnitPrice(""); };
