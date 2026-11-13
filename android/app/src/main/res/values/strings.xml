@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">ARIA KEPSUT</string>
+    <string name="title_activity_main">ARIA KEPSUT</string>
+    <string name="package_name">com.ariakepsut.crm</string>
+    <string name="custom_url_scheme">com.ariakepsut.crm</string>
+</resources>
