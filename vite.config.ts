@@ -5,12 +5,16 @@ import path from "path";
 
 import { nitro } from "nitro/vite";
 
-export default defineConfig(() => ({
+export default defineConfig(({ command }) => ({
   server: {
     host: "::",
     port: 8080,
   },
-  plugins: [dyadComponentTagger(), react(), nitro()],
+  plugins: [dyadComponentTagger(), react(), ...(command === "serve" ? [nitro()] : [])],
+  build: {
+    outDir: ".output/public",
+    emptyOutDir: true,
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

@@ -11,7 +11,7 @@
     "android:sync": "vite build && cap sync android",
     "lint": "eslint .",
     "preview": "vite preview",
-    "start": "node .output/server/index.mjs",
+    "start": "vite preview --host :: --port 3000",
     "test": "playwright test --config playwright-dyad.config.ts"
   },
   "dependencies": {
